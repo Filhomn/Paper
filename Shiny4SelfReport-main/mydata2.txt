@@ -1,0 +1,136 @@
+
+library(shiny)
+library(rdrop2)
+library(shinymaterial)
+library(shinysense)
+library(DT)
+library(shinyalert)
+library(shinyjs)
+
+fields <-
+  c(
+    "User_ID",
+    "Vessel_ID",
+    "Date",
+    "Days_fishing",
+    "Species1_1",
+    "Species1_2",
+    "Species1_3",
+    "Species1_4",
+    "Species2_1",
+    "Species2_2",
+    "Species2_3",
+    "Species2_4",
+    "Species3_1",
+    "Species3_2",
+    "Species3_3",
+    "Species3_4"
+  )
+outputDir <- "responses/csv"
+outputDir2 <- "responses/imgs"
+drop_auth(rdstoken = "token.rds")
+# Shiny app with 3 fields that the user can submit data for
+shinyApp(
+  ui = fluidPage(
+    title = "Triatlas",
+    useShinyalert(),
+    material_page(include_nav_bar = FALSE,
+                  tags$head(tags$style(
+                    type="text/css",
+                    "#img img {max-width: 100%; width: 100%; height: 100%}"
+                    
+                  ),
+                  
+                  tags$head(tags$meta(name="apple-mobile-web-app-capable", content="yes"),
+                            tags$link(rel="apple-touch-icon", href="triatlas.png"),
+                            tags$link(rel="apple-touch-icon", sizes="40x40", href="triatlas.png"),
+                            tags$link(rel="apple-touch-icon",sizes="152x152",  href="triatlas.png"),
+                            tags$link(rel="apple-touch-icon",sizes="180x180",  href="triatlas.png"),
+                            tags$link(href="tri1.png", rel="apple-touch-startup-image", media="(device-width: 640px) and (device-height: 1136px) and (-webkit-device-pixel-ratio: 2)")
+                            
+                            
+                            
+                            
+                            
+                            
+                  )
+                  
+                  
+                  
+                  ),
+                  uiOutput("img"),
+                  material_tabs(
+                    color = "blue",
+                    tabs = c(
+                      
+                      "Data" = "s_tab"
+                      
+                      
+                    )
+                  ),
+                  
+                  material_tab_content("s_tab",
+                                       dataTableOutput("responses", width = 300), tags$hr(),
+                                       div(style="display:inline-block",actionButton("submit2", "Load")),
+                                       div(style="display:inline-block",downloadButton("downloadData", "Download"))
+                  )
+                  
+                  
+                  
+    )
+  ),
+  server = function(input, output, session) {
+    
+    re1 <- reactive({gsub("\\\\", "/", input$file$datapath)})
+    
+     output$img <- renderUI({
+    tags$img(src = "https://i.ibb.co/pJSYRnQ/tri.png",width = "100%")
+  })
+
+    
+    observeEvent(input$submit2, {
+      shinyalert("Success! The data has been loaded.", type = "success", closeOnClickOutside = TRUE)
+      
+    })
+    
+
+    output$responses <- renderDataTable({
+      input$submit2
+      loadData()
+    })
+ 
+    loadData <- function() {
+      # Read all the files into a list
+      filesInfo <- drop_dir(outputDir)
+      filePaths <- filesInfo$path_display
+      data <- lapply(filePaths, drop_read_csv, stringsAsFactors = FALSE)
+      # Concatenate all data together into one data.frame
+      data <- do.call(rbind, data)
+     datatable(data, options = list(dom = 't',pageLength = 15), filter = list(position = "top"))
+      
+    }
+    
+    lData <- function() {
+      filesInfo <- drop_dir(outputDir)
+      filePaths <- filesInfo$path_display
+      data1 <- lapply(filePaths, drop_read_csv, stringsAsFactors = FALSE)
+      data1 <- do.call(rbind, data1)
+      data2<- data.frame(data1)
+    }
+    output$downloadData <- downloadHandler(
+      
+      
+      filename = function() {
+        paste("data", ".csv", sep = "")
+      },
+      content = function(file) {
+        write.csv(lData(), file, row.names = FALSE)
+      }
+    )
+    
+    
+    
+    
+    
+  }
+)

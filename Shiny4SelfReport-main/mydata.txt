@@ -1,0 +1,269 @@
+library(shiny)
+library(rdrop2)
+library(shinymaterial)
+library(shinysense)
+library(DT)
+library(shinyalert)
+library(shinyjs)
+
+
+
+# Define the fields we want to save from the form
+
+fields <-
+  c(
+    "User_ID",
+    "Vessel_ID",
+    "Date",
+    "Days_fishing",
+    "Species1_1",
+    "Species1_2",
+    "Species1_3",
+    "Species1_4",
+    "Species2_1",
+    "Species2_2",
+    "Species2_3",
+    "Species2_4",
+    "Species3_1",
+    "Species3_2",
+    "Species3_3",
+    "Species3_4"
+  )
+outputDir <- "responses/csv"
+outputDir2 <- "responses/imgs"
+token<-drop_auth()
+saveRDS (token, file = "token.rds")
+# Shiny app with 3 fields that the user can submit data for
+
+  ui = fluidPage(
+    title = "Triatlas",
+    useShinyalert(),
+    useShinyjs(),
+    material_page(include_nav_bar = FALSE,
+
+tags$head(
+ #CARD title properties
+      tags$style(
+        type = "text/css",
+        ".card .card-title {
+          font-size: 22px;
+          font-weight:300
+        }"
+      ),
+
+tags$style(
+        type = "text/css",
+        "input[type=range] + .thumb.active .value {
+          color: #fff;
+            margin-left: -2px;
+          margin-top: 6px;
+          font-size:16px
+        }"
+      ),
+      tags$style(
+        type = "text/css",
+        "input[type=range]::-webkit-slider-thumb {
+          border: none;
+          height: 25px;
+          width: 25px;
+          border-radius: 50%;
+          background: #26a69a;
+            -webkit-transition: -webkit-box-shadow .3s;
+          transition: -webkit-box-shadow .3s;
+          transition: box-shadow .3s;
+          transition: box-shadow .3s, -webkit-box-shadow .3s;
+          -webkit-appearance: none;
+          background-color: #26a69a;
+            -webkit-transform-origin: 50% 50%;
+          transform-origin: 50% 50%;
+          margin: -12px 0 0 0
+        }"
+      ),
+
+
+      tags$meta(name = "apple-mobile-web-app-capable", content = "yes"),
+      tags$link(rel = "apple-touch-icon", href = "https://i.ibb.co/pWMF2Kv/triatlas.png"),
+      tags$link(rel = "apple-touch-icon", sizes = "40x40", href = "https://i.ibb.co/pWMF2Kv/triatlas.png"),
+      tags$link(rel = "apple-touch-icon", sizes = "152x152",  href = "https://i.ibb.co/pWMF2Kv/triatlas.png"),
+      tags$link(rel = "apple-touch-icon", sizes = "180x180",  href = "https://i.ibb.co/pWMF2Kv/triatlas.png"),
+     
+      
+      tags$link( href="https://i.ibb.co/0XPvWHr/iphone5-splash.png", media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)", rel="apple-touch-startup-image"),
+      tags$link( href="https://i.ibb.co/x8sv8nq/iphone6-splash.png", media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)", rel="apple-touch-startup-image" ),
+      tags$link( href="https://i.ibb.co/vknxBFT/iphoneplus-splash.png", media="(device-width: 621px) and (device-height: 1104px) and (-webkit-device-pixel-ratio: 3)", rel="apple-touch-startup-image"),
+      tags$link( href="https://i.ibb.co/h1ZKyn9/iphonex-splash.png", media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)", rel="apple-touch-startup-image" ),
+      tags$link( href="https://i.ibb.co/XXw3rr7/ipad-splash.png", media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)", rel="apple-touch-startup-image" ),
+      tags$link( href="https://i.ibb.co/zZf4wkq/ipadpro1-splash.png", media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)", rel="apple-touch-startup-image" ),
+      tags$link( href="https://i.ibb.co/vhLB8cY/ipadpro2-splash.png", media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)", rel="apple-touch-startup-image" ) 
+    
+      
+    ),
+                 uiOutput("img"),
+      material_tabs(
+        color = "blue",
+        tabs = c(
+          "Questions" = "f_tab",
+          "About" = "w_tab")),
+
+      material_tab_content("w_tab",
+                          material_card(
+        "Disclaimer",
+      
+        br(),
+
+p(HTML("This app was created using Shiny4SelfReport application. Shiny4SelfReport is an application encoded to provide a tool for self-reporting data in small-scale fisheries. The app is part of the <b>TRIATLAS project: South and Tropical Atlantic
+    Climate-Based Marine Ecosystem Prediction for Sustainable Management (<a>https://triatlas.w.uib.no</a>).</b> This project has
+    received funding from the European Union’s Horizon 2020
+            research and innovation programme under grant agreement No 817578.<br>
+<br> We (the authors and maintainers of Shiny4SelfReport) are not responsible for the content, confidentiality, availability, security, loss, misuse or misappropriation of any data you received or submit to this application. The responsibility for the information and views expressed in this application lies entirely with the authors.")),
+
+        br()
+
+        
+        
+      ),
+      material_card("Terms of use",
+                    p(HTML("
+Shinyapps.io TERMS OF USE <br>
+<br>
+This application is hosted on a Shinyapps.io server https://www.shinyapps.io/.
+By using this app you are agreeing to the terms of use as described by Shinyaps.io:
+https://www.rstudio.com/about/shinyapps-terms-use/<br>
+<br>
+We (the authors and maintainers of this app) will not save your data on our servers.
+The Shinyapps server is not HIPAA (the Health Insurance Portability and Accountability Act)
+compliant, you must not upload protected health information or confidential data with this app.
+You may instead download the code and run the app locally on your private computer and network.
+We are not responsible for the confidentiality, availability, security, loss, misuse
+or misappropriation of any data you submit to this application.
+<br>
+TRIATLAS Researchers will treat personal data according to the General Data Protection Regulations (GDPR),
+European Regulation (EU) 2016/679. TRIATLAS does not accept any responsibility for modification made by third
+parties and their treatment of personal data.
+                           
+                           
+                           "))
+        
+      )
+
+),
+
+
+      material_tab_content("f_tab",
+   
+      material_card(' User Information2 ', textInput('User_ID',' User ID '), textInput('Vessel_ID',' Vessel ID ')), material_card(' Period & Effort ', dateInput('Date',' Date '), material_slider('Days_fishing',' Days fishing ', 0, 100, initial_value = 0)), material_card(' Species Abundance and Composition ',material_card('' ,material_slider('Species1_1',' Species 1 in kg ', 0, 100, initial_value = 0) ,material_slider('Species1_2',' Catch Value in R$/Kg ', 0, 100, initial_value = 0) ,fileInput(inputId = 'Species1_3', label =' Photo ', accept = c('image/png', 'image/jpeg', 'image/jpg'))  ) ,material_card('' ,material_slider('Species2_1',' Species 2 in kg ', 0, 100, initial_value = 0) ,material_slider('Species2_2',' Catch Value in R$/Kg ', 0, 100, initial_value = 0) ,fileInput(inputId = 'Species2_3', label =' Photo ', accept = c('image/png', 'image/jpeg', 'image/jpg'))  ) ,material_card('' ,material_slider('Species3_1',' Species 3 in kg ', 0, 110, initial_value = 0) ,material_slider('Species3_2',' Catch Value in R$/Kg ', 0, 100, initial_value = 0) ,fileInput(inputId = 'Species3_3', label =' Photo ', accept = c('image/png', 'image/jpeg', 'image/jpg'))  )   
+  ),
+
+
+    actionButton("submit", "Submit"),
+    br(),
+    br(),
+ br(),
+ br(),
+ br(),
+ br()
+    )
+)
+
+)
+ 
+    
+ 
+   
+  server = function(input, output, session) {
+    
+    re1 <- reactive({gsub("\\\\", "/", input$file$datapath)})
+    
+      output$img <- renderUI({
+    tags$img(src = "https://i.ibb.co/pJSYRnQ/tri.png",width = "100%")
+  })
+    
+    output$img2 <- renderImage({
+     if (is.null(input$file)) {
+       return(list(src = "blanck.png", height = "50px", width = "90px"))
+     } else {
+       list(src = re1(), height = "50px", width = "90px")
+     }
+    
+    }, deleteFile = FALSE)
+    
+    # Whenever a field is filled, aggregate all form data
+    formData <- reactive({
+      data <- sapply(fields, function(x) as.character(input[[x]]))
+      data 
+    })
+    
+    # When the Submit button is clicked, save the form data
+   
+    
+     observeEvent(input$submit, {
+      shinyalert("Success! The data has been sent.", type = "success", closeOnClickOutside = TRUE)
+      saveData(formData())
+
+    delay(2000, session$reload())
+    })
+    
+    # Show the previous responses
+    # (update with current response when Submit is clicked)
+  
+   
+    
+   saveData <- function(data) {
+    data <- t(data)
+    # Create a unique file name
+    fileName <-
+      sprintf("%s_%s.csv", as.integer(Sys.time()), digest::digest(data))
+    # Write the data to a temporary file locally
+    filePath <- file.path(tempdir(), fileName)
+    write.csv(data, filePath, row.names = FALSE, quote = TRUE)
+    # Upload the file to Dropbox
+    drop_upload(filePath, path = outputDir)
+    
+    
+            observe({
+          if (is.null(input$Species1_3)) {
+            return(NULL)}
+            else{
+      files1_3=file.rename(input$Species1_3$datapath, paste0(Sys.time(),'1_3.png'))
+      files1_3 = paste0(Sys.time(),'1_3.png')
+      drop_upload(files1_3, path = outputDir2)}
+                      })    
+            observe({
+            if (is.null(input$Species2_3)) {
+            return(NULL)}
+            else{files2_3=file.rename(input$Species2_3$datapath, paste0(Sys.time(),'2_3.png'))
+            files2_3 = paste0(Sys.time(),'2_3.png')
+            drop_upload(files2_3, path = outputDir2)}
+
+
+            })    
+            observe({
+            if (is.null(input$Species3_3)) {
+            return(NULL)}
+            else{
+            files3_3=file.rename(input$Species3_3$datapath, paste0(Sys.time(),'3_3.png'))
+            files3_3 = paste0(Sys.time(),'3_3.png')
+            drop_upload(files3_3, path = outputDir2)
+            }
+            })
+                
+  
+    
+    
+  }
+    
+    loadData <- function() {
+      # Read all the files into a list
+      filesInfo <- drop_dir(outputDir)
+      filePaths <- filesInfo$path_display
+      data <- lapply(filePaths, drop_read_csv, stringsAsFactors = FALSE)
+      # Concatenate all data together into one data.frame
+      data <- do.call(rbind, data)
+      data <- datatable(data, options = list(dom = 't',pageLength = 15), filter = list(position = "top"))
+      data
+    }
+
+    
+  }
+
+shinyApp(ui, server)

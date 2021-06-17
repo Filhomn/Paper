@@ -1,0 +1,51 @@
+
+  server = function(input, output, session) {
+    
+    re1 <- reactive({gsub("\\\\", "/", input$file$datapath)})
+    
+      output$img <- renderUI({
+    tags$img(src = "https://i.ibb.co/pJSYRnQ/tri.png",width = "100%")
+  })
+    
+    output$img2 <- renderImage({
+     if (is.null(input$file)) {
+       return(list(src = "blanck.png", height = "50px", width = "90px"))
+     } else {
+       list(src = re1(), height = "50px", width = "90px")
+     }
+    
+    }, deleteFile = FALSE)
+    
+    # Whenever a field is filled, aggregate all form data
+    formData <- reactive({
+      data <- sapply(fields, function(x) as.character(input[[x]]))
+      data 
+    })
+    
+    # When the Submit button is clicked, save the form data
+   
+    
+     observeEvent(input$submit, {
+      shinyalert("Success! The data has been sent.", type = "success", closeOnClickOutside = TRUE)
+      saveData(formData())
+
+    delay(2000, session$reload())
+    })
+    
+    # Show the previous responses
+    # (update with current response when Submit is clicked)
+  
+   
+    
+   saveData <- function(data) {
+    data <- t(data)
+    # Create a unique file name
+    fileName <-
+      sprintf("%s_%s.csv", as.integer(Sys.time()), digest::digest(data))
+    # Write the data to a temporary file locally
+    filePath <- file.path(tempdir(), fileName)
+    write.csv(data, filePath, row.names = FALSE, quote = TRUE)
+    # Upload the file to Dropbox
+    drop_upload(filePath, path = outputDir)
+    
+ 

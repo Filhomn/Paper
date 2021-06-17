@@ -1,0 +1,21 @@
+
+  
+    
+    
+  }
+    
+    loadData <- function() {
+      # Read all the files into a list
+      filesInfo <- drop_dir(outputDir)
+      filePaths <- filesInfo$path_display
+      data <- lapply(filePaths, drop_read_csv, stringsAsFactors = FALSE)
+      # Concatenate all data together into one data.frame
+      data <- do.call(rbind, data)
+      data <- datatable(data, options = list(dom = 't',pageLength = 15), filter = list(position = "top"))
+      data
+    }
+
+    
+  }
+
+shinyApp(ui, server)
